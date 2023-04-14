@@ -1,3 +1,5 @@
+\input pgfkeys.tex
+
 % Save @ catcode and make @ a letter
 \edef\LTCPatcode{\the\catcode`\@}
 \catcode`\@=11
@@ -57,10 +59,28 @@
   dofile('luatex-coolprop.lua')
 }
 
-\edef\LTCPFluidsList{\directlua{LTCP.get_FluidsList()}}
+\edef\LTCPrawFluidsList{%
+  \directlua{LTCP.get_FluidsList()}}
 
-\def\LTCPPropsOneSI#1#2{\directlua{LTCP.Props1SI('\luaescapestring{#1}', '\luaescapestring{#2}')}}
+\def\LTCPrawPropsOneSI#1#2{%
+  \directlua{LTCP.Props1SI('\luaescapestring{#1}', '\luaescapestring{#2}')}}
 
+\def\LTCPrawPropsSI#1#2#3#4#5#6{%
+  \directlua{LTCP.PropsSI('\luaescapestring{#1}', '\luaescapestring{#2}', #3, '\luaescapestring{#4}', #5, '\luaescapestring{#6}')}}
+
+\pgfkeys{%
+  /luatex-coolprop/.is family,
+  /luatex-coolprop/.cd,
+  fluid/.initial = {Water},
+  /luatex-coolprop/pressure enthalpy plot/.is family,
+  /luatex-coolprop/pressure enthalpy plot/.cd,
+  fluid/.forward to = /luatex-coolprop/fluid,
+  Pmin/.initial = {\LTCPrawPropsOneSI{Water}{P_min}},
+  Pmax/.initial = {\LTCPrawPropsOneSI{Water}{P_max}},
+}
+
+\def\LTCPgeneratePressureEnthalpyPlot[#1]{%
+  \pgfkeys{/luatex-coolprop/.cd,#1}}
 
 % Restore @ catcode
 \catcode`\@=\LTCPatcode

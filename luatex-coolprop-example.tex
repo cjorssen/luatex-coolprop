@@ -1,6 +1,9 @@
 \documentclass[landscape]{article}
 
 \usepackage{xcolor-material}
+\selectcolormodel{natural}
+\RequirePackage{ninecolors}
+\selectcolormodel{rgb}
 \usepackage[a4paper,margin = 2cm, includeheadfoot]{geometry}
 
 \usepackage{pgffor}
@@ -8,9 +11,48 @@
 \usepackage{tabularray}
 \usepackage{longtable}
 
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+
 \input luatex-coolprop.tex
 
 \begin{document}
+
+\LTCPrawPropsOneSI{Water}{T_triple}
+
+\LTCPrawPropsSI{Smass}{Q}{0}{T}{298}{Water}
+
+\LTCPrawPropsSI{Smass}{Q}{1}{T}{298}{Water}
+
+\LTCPrawPropsSI{Hmass}{Smass}{400}{P}{2e5}{Water}
+
+\begin{tikzpicture}
+  \begin{semilogyaxis}[
+    width = .6\linewidth,
+    grid = both,
+    xlabel = {$h (\mathrm{J / kg})$},
+    ylabel = {$p (\mathrm{Pa})$},
+    declare function = {%
+      isoQ_P(\T,\Q) = \directlua{LTCP.PropsSI('P', 'T', \T, 'Q', \Q, 'R1234yf')};
+      isoQ_Hmass(\T,\Q) = \directlua{LTCP.PropsSI('Hmass', 'T', \T, 'Q', \Q, 'R1234yf')};
+    },
+    ]
+    \foreach \Q in {0, 0.1, ..., 1}{%
+      \addplot+[
+      forget plot,
+      no marks,
+      thick,
+      GoogleBlue,
+      use fpu = false,
+      domain = {\directlua{LTCP.Props1SI('R1234yf', 'T_triple')}:\directlua{LTCP.Props1SI('R1234yf', 'T_critical')}},
+      samples = 100,
+      ] ({isoQ_Hmass(x, \Q)}, {isoQ_P(x, \Q)});
+      }
+  \end{semilogyaxis}
+\end{tikzpicture}
+
+\end{document}
+
 
 \def\tableData{%
   \begin{longtblr}[
@@ -33,12 +75,12 @@
     \unexpanded\expandafter{\tableData}
     \noexpand\\ \noexpand\hline
     \fluid &
-    \LTCPPropsOneSI{\fluid}{T_triple} &
-    \LTCPPropsOneSI{\fluid}{T_critical} &
-    \LTCPPropsOneSI{\fluid}{T_max} &
-    \LTCPPropsOneSI{\fluid}{p_triple} &
-    \LTCPPropsOneSI{\fluid}{p_critical} &
-    \LTCPPropsOneSI{\fluid}{P_max} 
+    \LTCPrawPropsOneSI{\fluid}{T_triple} &
+    \LTCPrawPropsOneSI{\fluid}{T_critical} &
+    \LTCPrawPropsOneSI{\fluid}{T_max} &
+    \LTCPrawPropsOneSI{\fluid}{p_triple} &
+    \LTCPrawPropsOneSI{\fluid}{p_critical} &
+    \LTCPrawPropsOneSI{\fluid}{P_max} 
   }
 }
 

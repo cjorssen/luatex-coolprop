@@ -1,12 +1,5 @@
 LTCP = LTCP or {}
 
-local tex_sprint = tex.sprint
-
-function LTCP.error(string_error)
-   tex_sprint('\\csname LTCP@error\\endcsname{' .. string_error .. '}')
-end
-
-
 -- luatex-coolprop relies on FFI lua library (http://luajit.org/ext_ffi.html)
 local ffi = require('ffi')
 local ffi_load = ffi.load
@@ -15,7 +8,21 @@ local ffi_typeof = ffi.typeof
 local ffi_new = ffi.new
 local ffi_string = ffi.string
 
+local math_huge = math.huge
+
 local pcall = pcall
+
+local string_gmatch = string.gmatch
+
+local table_insert = table.insert
+local table_sort = table.sort
+local table_concat = table.concat
+
+local tex_sprint = tex.sprint
+
+function LTCP.error(string_error)
+   tex_sprint('\\csname LTCP@error\\endcsname{' .. string_error .. '}')
+end
 
 local status, CPlib = pcall(ffi_load, '/home/christophe/git/CoolProp/build/libCoolProp')
 
@@ -60,10 +67,6 @@ function LTCP.get_errstring()
    return tex_sprint(LTCP._get_errstring())
 end
 
-local string_gmatch = string.gmatch
-local table_insert = table.insert
-local table_sort = table.sort
-local table_concat = table.concat
 
 function LTCP._get_FluidsList()
    return LTCP._get_global_param_string('FluidsList')
@@ -82,6 +85,17 @@ function LTCP.get_FluidsList()
    return tex_sprint(FluidsList)
 end
 
+function LTCP.IsInFluidsList(stringFluid)
+   for fluid in string_gmatch(LTCP._get_FluidsList(), "([^,]+)") do
+      if stringFluid == fluid then
+	 return true
+      else
+	 LTCP.error('The fluid you requested is not in CoolProp FluidsList.^^JPlease check the spelling (fluid names as case-sensitive.')
+	 return false
+      end
+   end
+end
+
 function LTCP._get_version()
    return LTCP._get_global_param_string('version')
 end
@@ -98,13 +112,12 @@ function LTCP.get_gitrevision()
    return tex_sprint(LTCP._get_gitrevision())
 end
 
-local huge = math.huge
 
 function LTCP._Props1SI(string_FluidName, string_Output)
    -- See http://coolprop.org/coolprop/HighLevelAPI.html#table-of-string-inputs-to-propssi-function
    -- Trivial must be True
    local value = CPlib.Props1SI(string_FluidName, string_Output)
-   if value == huge then
+   if value == math_huge then
       LTCP.error('Something went wrong with CoolProp.Props1SI("' .. string_FluidName .. '", "' .. string_Output .. '").^^JThis is the errstring message:^^J' .. LTCP._get_errstring())
       return 0
    end
@@ -118,7 +131,7 @@ end
 function LTCP._PropsSI(string_Output, string_Name1, double_Prop1, string_Name2, double_Prop2, string_Ref)
    -- See http://coolprop.org/coolprop/HighLevelAPI.html#table-of-string-inputs-to-propssi-function
    local value = CPlib.PropsSI(string_Output, string_Name1, double_Prop1, string_Name2, double_Prop2, string_Ref)
-   if value == huge then
+   if value == math_huge then
       LTCP.error('Something went wrong with CoolProp.PropsSI("' .. string_FluidName .. '", "' .. string_Output .. '").^^JThis is the errstring message:^^J' .. LTCP._get_errstring())
       return 0
    end
@@ -128,3 +141,4 @@ end
 function LTCP.PropsSI(string_Output, string_Name1, double_Prop1, string_Name2, double_Prop2, string_Ref)
    return tex_sprint(LTCP._PropsSI(string_Output, string_Name1, double_Prop1, string_Name2, double_Prop2, string_Ref))
 end
+

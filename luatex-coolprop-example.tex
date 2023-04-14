@@ -1,0 +1,56 @@
+\documentclass[landscape]{article}
+
+\usepackage{xcolor-material}
+\usepackage[a4paper,margin = 2cm, includeheadfoot]{geometry}
+
+\usepackage{pgffor}
+
+\usepackage{tabularray}
+\usepackage{longtable}
+
+\input luatex-coolprop.tex
+
+\begin{document}
+
+\def\tableData{%
+  \begin{longtblr}[
+    caption = {All trivial properties},
+    label = {tblr:trivial},
+    ]{%
+      colspec = {ccccccc},
+      rowhead = 1, rowfoot = 0,
+      row{odd} = {GoogleBlue}, row{even} = {GoogleYellow},
+    }
+    Fluid & Ttriple & Tcrit & Tmax & Ptriple & Pcrit & Pmax}
+
+% \def\tableData{%
+%   \begin{longtable}{cccccccc}
+%     Fluid & Ttriple & Tcrit & Tmax & Ptriple & Pcrit & Pmin & Pmax}
+
+  
+\foreach \fluid in \LTCPFluidsList{%
+  \xdef\tableData{%
+    \unexpanded\expandafter{\tableData}
+    \noexpand\\ \noexpand\hline
+    \fluid &
+    \LTCPPropsOneSI{\fluid}{T_triple} &
+    \LTCPPropsOneSI{\fluid}{T_critical} &
+    \LTCPPropsOneSI{\fluid}{T_max} &
+    \LTCPPropsOneSI{\fluid}{p_triple} &
+    \LTCPPropsOneSI{\fluid}{p_critical} &
+    \LTCPPropsOneSI{\fluid}{P_max} 
+  }
+}
+
+\xdef\tableData{%
+  \unexpanded\expandafter{\tableData}\noexpand\end{longtblr}}
+
+\tableData
+
+
+\end{document}
+
+% Local Variables:
+% coding: utf-8-unix
+% TeX-engine: luatex
+% End:

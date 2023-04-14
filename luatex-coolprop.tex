@@ -1,0 +1,73 @@
+% Save @ catcode and make @ a letter
+\edef\LTCPatcode{\the\catcode`\@}
+\catcode`\@=11
+
+% Generic error message
+\def\LTCP@error#1{%
+  \errhelp{}%
+  \errmessage{%
+    !!! Package luatex-coolprop Error !!!%
+    ^^J#1}%
+}
+
+% luatex-coolprop needs LuaTeX or extensions such as LuaHBTeX
+\begingroup\expandafter\expandafter\expandafter\endgroup
+\expandafter\ifx\csname directlua\endcsname\relax
+  % Display an error
+  \LTCP@error{%
+    luatex-coolprop needs LuaTeX or extensions such as LuaHBTeX to run.^^J%
+    Please use a compatible engine.%
+  % Restore @ catcode
+  \catcode`\@=\LTCPatcode
+  % No LuaTeX: quitting 
+  \expandafter\endinput
+\fi
+
+% luatex-coolprop relies on calling coolprop library with the help of the FFI lua library (http://luajit.org/ext_ffi.html).
+% FFI has been added to LuaTeX since version 1.0.3.
+% https://tug.org/pipermail/luatex/2017-February/006345.html
+% So we need to check the version of the engine.
+\ifnum\directlua{tex.sprint(status.shell_escape)}=1\relax
+\else
+  % Display an error
+  \LTCP@error{%
+    luatex-coolprop needs LuaTeX running with shell-escape enabled.^^J%
+    Try compiling with --shell-escape option.}
+  % Restore @ catcode
+  \catcode`\@=\LTCPatcode
+  % No shell-escape: quitting 
+  \expandafter\endinput
+\fi
+
+% FFI in LuaTeX is not allowed when shell-escape is disabled or restricted. So we check shell-escape status and ensure shell-escape is enabled.
+% See also: https://tex.stackexchange.com/a/624551/8425
+\ifnum\directlua{tex.sprint(status.shell_escape)}=1\relax
+\else
+  % Display an error
+  \LTCP@error{%
+    luatex-coolprop needs LuaTeX running with shell-escape enabled.^^J%
+    Try compiling with --shell-escape option.}
+  % Restore @ catcode
+  \catcode`\@=\LTCPatcode
+  % No shell-escape: quitting 
+  \expandafter\endinput
+\fi
+
+\directlua{%
+  dofile('luatex-coolprop.lua')
+}
+
+\edef\LTCPFluidsList{\directlua{LTCP.get_FluidsList()}}
+
+\def\LTCPPropsOneSI#1#2{\directlua{LTCP.Props1SI('\luaescapestring{#1}', '\luaescapestring{#2}')}}
+
+
+% Restore @ catcode
+\catcode`\@=\LTCPatcode
+
+\endinput
+
+% Local Variables:
+% coding: utf-8-unix
+% TeX-engine: luatex
+% End:
